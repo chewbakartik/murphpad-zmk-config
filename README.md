@@ -49,7 +49,7 @@ Try the following:
 
 Does it line up with what [ZMK Power Profiler](https://zmk.dev/power-profiler) estimates? Keep in mind that cheaper batteries may not actually have the advertised mAh capacity...
 
-#### Double-check your configuration.
+#### Modify your configuration.
 
 Lowering the values of `CONFIG_ZMK_IDLE_TIMEOUT` and `CONFIG_ZMK_IDLE_SLEEP_TIMEOUT` in [config/murphpad.conf](config/murphpad.conf) will cause the board to enter power-saving modes more quickly.
 
@@ -105,14 +105,6 @@ Later revisions of the MurphPad add jumpers to simplify this process for boards 
 
 ---
 
-### After disconnecting the MurphPad from Bluetooth, it won't reconnect.
-
-#### Forget the Bluetooth connection on both the MurphPad and the device, then try re-pairing.
-
-If you don't remember which profile on the MurphPad was used to connect to a specific device, this may mean cycling through each (`&bt BT_PRV`/`&bt BT_NXT`) and clearing them (`&bt BT_CLR`) one by one. [See ZMK's documentation for more info](https://zmk.dev/docs/behaviors/bluetooth#bluetooth-pairing-and-profiles).
-
-As a last resort, try flashing the `settings_reset` firmware for your board; this will force-clear everything.
-
 ### The status LED is still blue after flashing my nice!nano.
 
 This means it is still in bootloader mode. Are you 100% sure you flashed it?
@@ -126,6 +118,35 @@ Just like the Pro Micro, the nice!nano is soldered on "face down", so you will n
 If you accidentally flashed with firmware for a different *board* like the nice!60 rather than [a *shield* for the nice!nano](https://zmk.dev/docs/hardware#pro_micro), the bootloader may have been overwritten.
 
 Unfortunately, you won't be able to simply reflash with nice!nano firmware and get things back to normal if this is the case. [Follow Nice's instructions to reflash the bootloader](https://nicekeyboards.com/docs/nice-nano/troubleshooting#my-nicenano-seems-to-be-acting-up-and-i-want-to-re-flash-the-bootloader).
+
+### Basic Bluetooth Info
+
+- Each connection is saved to a profile on the board. To connect to a new device, you must select a new profile (`&bt BT_PRV`/`&bt BT_NXT`).
+- If a connection has previously been saved to that profile, it will have to be cleared (`&bt BT_CLR`) before the profile can be re-used.
+- By default, there are five profiles available. The keyboard will try to maintain its connection with all devices, and only send output to the one that is selected.
+- Split keyboards have a `central` half (left) and a `peripheral` half (right). The central half connects to the device, while the peripheral half only connects to the central half.
+
+#### Can't connect or stay connected?
+
+1. Clear the profile before attempting to pair, even if it hasn't been used. Junk data in flash memory may be interfering with the connection.
+2. If the connection is unstable, increase the transmit power of the Bluetooth radio on your board by setting `CONFIG_BT_CTLR_TX_PWR_PLUS_8=y`. Certain boards may be able to crank the transmit power up farther; see [ZMK's documentation for more info](https://zmk.dev/docs/troubleshooting#connectivity-issues).
+
+#### Powering the board via USB?
+
+Until instructed otherwise, the firmware will try to send output over USB even if it is connected via Bluetooth. It can't tell if it's connected to something like a power bank. To change this default, add `&out OUT_BLE` to your keymap and press the key to default to Bluetooth instead.
+ - `&out OUT_TOG` will allow you to toggle the preference for Bluetooth vs USB.
+
+This setting will be remembered until forcibly cleared by flashing the `settings_reset` firmware, so the key mapping can be removed afterward.
+
+#### Having trouble re-connecting?
+
+Old connections must be cleared on *both* the device and the keyboard. If you don't remember which profile was used to connect to a specific device, this may mean cycling through each and clearing them one by one. [See ZMK's documentation for more info](https://zmk.dev/docs/behaviors/bluetooth#bluetooth-pairing-and-profiles).
+
+As a last resort, try flashing the `settings_reset` firmware for your board; this will force-clear everything.
+
+#### Split keyboard woes?
+
+Remember that the peripheral (right) half will not output anything by itself; it must be paired with a central (left) half. If the two halves have failed to pair, [follow these instructions to flash the `settings_reset` firmware to both halves](https://zmk.dev/docs/troubleshooting#reset-split-keyboard-procedure).
 
 ## Further Troubleshooting Resources
 
